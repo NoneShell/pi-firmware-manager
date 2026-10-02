@@ -1,0 +1,41 @@
+{
+  "name": "pi-firmware-manager",
+  "version": "0.1.0",
+  "description": "FirmEE firmware management and extraction tools for Pi",
+  "type": "module",
+  "private": true,
+  "keywords": [
+    "pi-package",
+    "firmee",
+    "firmware"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "generate:api": "openapi-typescript ${FIRMEE_OPENAPI_URL:-http://10.211.55.17:8000/openapi.json} -o src/generated/firmee-api.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "check": "npm run typecheck && npm test"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "0.99.2",
+    "@earendil-works/pi-coding-agent": "0.99.2",
+    "@types/node": "^22.19.0",
+    "openapi-typescript": "^7.10.1",
+    "typescript": "5.9.3"
+  }
+}

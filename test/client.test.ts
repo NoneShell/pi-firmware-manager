@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import test from "node:test";
-import { FirmeeApiError, FirmeeClient } from "../src/client.ts";
+import { ensureNoProxyForLocalService, FirmeeApiError, FirmeeClient } from "../src/client.ts";
 import type { FirmeeConfig } from "../src/config.ts";
 
 async function mockServer(): Promise<{ baseUrl: string; close: () => Promise<void> }> {
@@ -73,4 +73,15 @@ test("client handles JSON, query parameters, API errors, and SSE", async () => {
 	} finally {
 		await server.close();
 	}
+});
+
+test("private FirmEE hosts are added exactly to NO_PROXY", () => {
+	const env: NodeJS.ProcessEnv = {
+		NO_PROXY: "localhost,10.0.0.0/8",
+		no_proxy: "localhost,10.0.0.0/8",
+	};
+	assert.equal(ensureNoProxyForLocalService("http://10.211.55.17:8000", env), true);
+	assert.match(env.NO_PROXY ?? "", /(?:^|,)10\.211\.55\.17(?:,|$)/);
+	assert.match(env.no_proxy ?? "", /(?:^|,)10\.211\.55\.17(?:,|$)/);
+	assert.equal(ensureNoProxyForLocalService("https://api.example.com", env), false);
 });

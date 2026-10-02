@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { isIP } from "node:net";
 import type { FirmeeConfig } from "./config.ts";
 import type {
 	ApiCapabilities,
@@ -60,6 +61,46 @@ function isRecord(value: unknown): value is JsonRecord {
 	return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+function isPrivateServiceHost(hostname: string): boolean {
+	const normalized = hostname.replace(/^\[(.*)\]$/, "$1").toLowerCase();
+	if (normalized === "localhost" || normalized.endsWith(".local")) return true;
+	const ipVersion = isIP(normalized);
+	if (ipVersion === 6) return normalized === "::1" || normalized.startsWith("fc") || normalized.startsWith("fd") || normalized.startsWith("fe80:");
+	if (ipVersion !== 4) return false;
+	const octets = normalized.split(".").map(Number);
+	const [first = -1, second = -1] = octets;
+	return (
+		first === 10 ||
+		first === 127 ||
+		(first === 169 && second === 254) ||
+		(first === 172 && second >= 16 && second <= 31) ||
+		(first === 192 && second === 168) ||
+		(first === 100 && second >= 64 && second <= 127) ||
+		(first === 198 && (second === 18 || second === 19))
+	);
+}
+
+function appendNoProxy(value: string | undefined, hostname: string): string {
+	const entries = (value ?? "")
+		.split(",")
+		.map((entry) => entry.trim())
+		.filter(Boolean);
+	if (!entries.includes(hostname)) entries.push(hostname);
+	return entries.join(",");
+}
+
+/**
+ * Pi uses Undici's EnvHttpProxyAgent. It does not understand CIDR entries such as 10.0.0.0/8,
+ * so add the exact configured private host to NO_PROXY before the first request.
+ */
+export function ensureNoProxyForLocalService(baseUrl: string, env: NodeJS.ProcessEnv = process.env): boolean {
+	const hostname = new URL(baseUrl).hostname.replace(/^\[(.*)\]$/, "$1").toLowerCase();
+	if (!isPrivateServiceHost(hostname)) return false;
+	env.NO_PROXY = appendNoProxy(env.NO_PROXY, hostname);
+	env.no_proxy = appendNoProxy(env.no_proxy, hostname);
+	return true;
+}
+
 export class FirmeeApiError extends Error {
 	readonly status: number;
 	readonly code: string;
@@ -89,6 +130,7 @@ export class FirmeeClient {
 
 	constructor(config: FirmeeConfig) {
 		this.config = config;
+		ensureNoProxyForLocalService(config.baseUrl);
 	}
 
 	url(path: string, query?: Record<string, QueryValue>): URL {
@@ -274,5 +316,14 @@ export function describeError(error: unknown): string {
 		const request = error.requestId ? ` Request ID: ${error.requestId}.` : "";
 		return `${error.code}: ${error.message}.${request}`;
 	}
-	return error instanceof Error ? error.message : String(error);
+	if (error instanceof Error) {
+		const cause = error.cause;
+		if (isRecord(cause)) {
+			const details = [cause.code, cause.address, cause.port].filter((value) => value !== undefined).join(" ");
+			if (details) return `${error.message} (${details})`;
+			if (typeof cause.message === "string") return `${error.message}: ${cause.message}`;
+		}
+		return error.message;
+	}
+	return String(error);
 }

@@ -50,6 +50,10 @@ FIRMEE_TRANSFER_TIMEOUT_MS
 
 The default endpoint is `http://10.211.55.17:8000` and the default artifact directory is `~/Downloads/FirmEE`.
 
+Pi uses an environment-aware HTTP proxy dispatcher. For localhost, private IPv4 ranges, `.local`
+names, and private IPv6 addresses, the extension adds the exact FirmEE hostname to `NO_PROXY`.
+This handles environments whose existing `NO_PROXY` uses CIDR entries that Undici does not match.
+
 ## Tools
 
 | Tool | Purpose |

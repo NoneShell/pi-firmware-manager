@@ -2,13 +2,14 @@ import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-c
 import { FirmeeClient, describeError } from "./client.ts";
 import { defaultUserConfigPath, loadConfig, saveUserConfig } from "./config.ts";
 import { formatStatus } from "./format.ts";
+import { RuntimeTerminal } from "./terminal.ts";
 import { registerFirmeeTools } from "./tools.ts";
 
 async function showStatus(ctx: ExtensionCommandContext): Promise<void> {
 	try {
 		const config = await loadConfig({ cwd: ctx.cwd });
 		const client = new FirmeeClient(config);
-		const [health, capabilities] = await Promise.all([client.health(), client.capabilities()]);
+		const [health, capabilities] = await Promise.all([client.liveness(), client.capabilities()]);
 		if (health.status !== "ok") throw new Error(`FirmEE health status is ${health.status}`);
 		ctx.ui.notify(formatStatus(capabilities, config.baseUrl), "info");
 		ctx.ui.setStatus("firmee", `FirmEE ${capabilities.api_version} · ${new URL(config.baseUrl).host}`);
@@ -35,16 +36,67 @@ async function configure(ctx: ExtensionCommandContext, providedUrl: string | und
 	}
 }
 
+async function openTerminal(ctx: ExtensionCommandContext, runtimeId: string | undefined): Promise<void> {
+	if (!runtimeId) {
+		ctx.ui.notify("Usage: /firmee terminal <runtime_id>", "warning");
+		return;
+	}
+	const config = await loadConfig({ cwd: ctx.cwd });
+	const terminal = await RuntimeTerminal.connect(new FirmeeClient(config), runtimeId);
+	ctx.ui.notify(`FirmEE terminal connected to ${runtimeId}. Submit a blank command or 'exit' to close.`, "info");
+	try {
+		while (true) {
+			const command = await ctx.ui.input(`FirmEE terminal · ${runtimeId}`, "command, blank, or exit");
+			if (!command || command.trim().toLowerCase() === "exit") break;
+			const result = await terminal.execute(command);
+			const output = [
+				`exit: ${result.exit_code ?? "—"} · ${result.duration_ms} ms · ${result.channel}`,
+				result.stdout ? `stdout:\n${result.stdout.slice(0, 12000)}` : "",
+				result.stderr ? `stderr:\n${result.stderr.slice(0, 12000)}` : "",
+			].filter(Boolean);
+			ctx.ui.notify(output.join("\n"), result.exit_code === 0 ? "info" : "warning");
+		}
+	} finally {
+		await terminal.close();
+		ctx.ui.notify("FirmEE terminal closed.", "info");
+	}
+}
+
 export default function firmeeExtension(pi: ExtensionAPI): void {
 	registerFirmeeTools(pi);
 
 	pi.registerCommand("firmee", {
-		description: "Configure FirmEE or inspect service status: /firmee [status|config|show|docs]",
+		description: "Configure FirmEE, inspect status, or open a Runtime terminal: /firmee [status|diagnose|terminal|config|show|docs]",
 		handler: async (args, ctx) => {
 			const [subcommand = "status", ...rest] = args.trim().split(/\s+/).filter(Boolean);
 			switch (subcommand) {
 				case "status":
 					await showStatus(ctx);
+					break;
+				case "diagnose": {
+					try {
+						const config = await loadConfig({ cwd: ctx.cwd });
+						const readiness = await new FirmeeClient(config).readiness();
+						ctx.ui.notify(
+							[
+								`FirmEE readiness: ${readiness.status}`,
+								...readiness.checks.map(
+									(check) => `${check.required ? "required" : "optional"} ${check.name}: ${check.status} (${check.latency_ms} ms) — ${check.detail}`,
+								),
+							].join("\n"),
+							readiness.status === "ready" ? "info" : "warning",
+						);
+					} catch (error) {
+						ctx.ui.notify(describeError(error), "error");
+					}
+					break;
+				}
+				case "terminal":
+					try {
+						await openTerminal(ctx, rest[0]);
+					} catch (error) {
+						ctx.ui.notify(describeError(error), "error");
+					}
 					break;
 				case "config":
 					await configure(ctx, rest[0]);
@@ -68,7 +120,7 @@ export default function firmeeExtension(pi: ExtensionAPI): void {
 					break;
 				}
 				default:
-					ctx.ui.notify("Usage: /firmee [status|config [URL]|show|docs]", "warning");
+					ctx.ui.notify("Usage: /firmee [status|diagnose|terminal <runtime_id>|config [URL]|show|docs]", "warning");
 			}
 		},
 	});

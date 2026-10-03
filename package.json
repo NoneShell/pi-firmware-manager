@@ -1,7 +1,7 @@
 {
   "name": "pi-firmware-manager",
-  "version": "0.1.1",
-  "description": "FirmEE firmware management and extraction tools for Pi",
+  "version": "0.2.0",
+  "description": "Complete FirmEE firmware, extraction, simulation, Runtime, and export workflows for Pi",
   "type": "module",
   "private": true,
   "keywords": [
@@ -19,6 +19,7 @@
   },
   "files": [
     "src",
+    "docs",
     "README.md"
   ],
   "scripts": {

@@ -1,0 +1,1 @@
+pi-firmware-manager real Runtime file transfer validation

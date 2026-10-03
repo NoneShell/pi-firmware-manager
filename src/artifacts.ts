@@ -91,18 +91,21 @@ function transferSignal(parent: AbortSignal | undefined, timeoutMs: number): {
 	};
 }
 
-export async function downloadExtractionArtifact(options: {
+interface RangedArtifactOptions {
 	client: FirmeeClient;
 	config: FirmeeConfig;
-	extractionId: string;
-	kind: ExtractionArtifactKind;
+	apiPath: string;
+	artifactKey: string;
+	fallbackFilename: string;
+	expectedSha256?: string | undefined;
 	destinationDirectory?: string;
 	signal?: AbortSignal;
-}): Promise<DownloadResult> {
-	const { client, config, extractionId, kind } = options;
+}
+
+export async function downloadRangedArtifact(options: RangedArtifactOptions): Promise<DownloadResult> {
+	const { client, config, apiPath, artifactKey } = options;
 	const directory = resolve(options.destinationDirectory ?? config.downloadDirectory);
 	await mkdir(directory, { recursive: true });
-	const apiPath = `/api/v1/extractions/${encodeURIComponent(extractionId)}/artifacts/${ARTIFACT_PATHS[kind]}`;
 	const { signal, cleanup } = transferSignal(options.signal, config.transferTimeoutMs);
 	try {
 		const probe = await client.fetchResponse("GET", apiPath, {
@@ -114,7 +117,7 @@ export async function downloadExtractionArtifact(options: {
 		const totalBytes = totalFromResponse(probe);
 		const filename = dispositionFilename(
 			probe.headers.get("content-disposition"),
-			`${extractionId}-${ARTIFACT_PATHS[kind]}`,
+			options.fallbackFilename,
 		);
 		const etag = probe.headers.get("etag") ?? undefined;
 		await probe.body?.cancel();
@@ -122,8 +125,7 @@ export async function downloadExtractionArtifact(options: {
 		const finalPath = join(directory, filename);
 		if ((await existingSize(finalPath)) === totalBytes) {
 			const sha256 = await sha256File(finalPath);
-			const expected = kind === "rootfs" ? expectedRootfsSha(await client.getExtraction(extractionId, signal)) : undefined;
-			if (!expected || expected === sha256) {
+			if (!options.expectedSha256 || options.expectedSha256 === sha256) {
 				return {
 					path: finalPath,
 					filename,
@@ -136,7 +138,7 @@ export async function downloadExtractionArtifact(options: {
 			}
 		}
 
-		const prefix = `.${extractionId}-${kind}`;
+		const prefix = `.${artifactKey}`;
 		const partialPath = join(directory, `${prefix}.part`);
 		const metadataPath = `${partialPath}.json`;
 		let metadata: PartialMetadata | undefined;
@@ -185,11 +187,8 @@ export async function downloadExtractionArtifact(options: {
 			throw new Error(`Incomplete FirmEE artifact: expected ${totalBytes} bytes, received ${sizeBytes}`);
 		}
 		const sha256 = await sha256File(partialPath);
-		if (kind === "rootfs") {
-			const expected = expectedRootfsSha(await client.getExtraction(extractionId, signal));
-			if (expected && expected !== sha256) {
-				throw new Error(`RootFS SHA-256 mismatch: expected ${expected}, received ${sha256}`);
-			}
+		if (options.expectedSha256 && options.expectedSha256 !== sha256) {
+			throw new Error(`Artifact SHA-256 mismatch: expected ${options.expectedSha256}, received ${sha256}`);
 		}
 		await rename(partialPath, finalPath);
 		await rm(metadataPath, { force: true });
@@ -205,6 +204,51 @@ export async function downloadExtractionArtifact(options: {
 	} finally {
 		cleanup();
 	}
+}
+
+export async function downloadExtractionArtifact(options: {
+	client: FirmeeClient;
+	config: FirmeeConfig;
+	extractionId: string;
+	kind: ExtractionArtifactKind;
+	destinationDirectory?: string;
+	signal?: AbortSignal;
+}): Promise<DownloadResult> {
+	const expectedSha256 =
+		options.kind === "rootfs"
+			? expectedRootfsSha(await options.client.getExtraction(options.extractionId, options.signal))
+			: undefined;
+	return downloadRangedArtifact({
+		client: options.client,
+		config: options.config,
+		apiPath: `/api/v1/extractions/${encodeURIComponent(options.extractionId)}/artifacts/${ARTIFACT_PATHS[options.kind]}`,
+		artifactKey: `${options.extractionId}-${options.kind}`,
+		fallbackFilename: `${options.extractionId}-${ARTIFACT_PATHS[options.kind]}`,
+		...(expectedSha256 ? { expectedSha256 } : {}),
+		...(options.destinationDirectory ? { destinationDirectory: options.destinationDirectory } : {}),
+		...(options.signal ? { signal: options.signal } : {}),
+	});
+}
+
+export async function downloadSimulationExport(options: {
+	client: FirmeeClient;
+	config: FirmeeConfig;
+	simulationId: string;
+	kind: "local" | "docker";
+	expectedSha256?: string | undefined;
+	destinationDirectory?: string;
+	signal?: AbortSignal;
+}): Promise<DownloadResult> {
+	return downloadRangedArtifact({
+		client: options.client,
+		config: options.config,
+		apiPath: `/api/v1/simulations/${encodeURIComponent(options.simulationId)}/exports/${options.kind}`,
+		artifactKey: `${options.simulationId}-export-${options.kind}`,
+		fallbackFilename: `${options.simulationId}-${options.kind}.tar.gz`,
+		...(options.expectedSha256 ? { expectedSha256: options.expectedSha256 } : {}),
+		...(options.destinationDirectory ? { destinationDirectory: options.destinationDirectory } : {}),
+		...(options.signal ? { signal: options.signal } : {}),
+	});
 }
 
 export async function sha256LocalFile(path: string): Promise<string> {

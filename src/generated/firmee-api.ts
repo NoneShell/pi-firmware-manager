@@ -12,10 +12,110 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Service health
-         * @description Check that the API process is ready to accept requests.
+         * Compatibility health check
+         * @description Compatibility alias for API process liveness; use platform_readiness for dependency checks.
          */
         get: operations["platform_health"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check API liveness
+         * @description Return success when the API process event loop can serve requests; no dependency is probed.
+         */
+        get: operations["platform_liveness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check platform readiness
+         * @description Probe required database, storage, worker, and FirmEE dependencies plus optional Pi readiness.
+         */
+        get: operations["platform_readiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/backends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inspect platform backends
+         * @description Return structured required and optional backend checks without starting billable Pi work.
+         */
+        get: operations["platform_backends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/workers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workers
+         * @description List current and historical worker heartbeats and mark expired heartbeats stale.
+         */
+        get: operations["platform_workers_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inspect Service storage
+         * @description Return the configured storage root, required directory state, writability, and disk capacity.
+         */
+        get: operations["platform_storage_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -124,6 +224,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agents/pi/resources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Agent Pack resources
+         * @description List reviewed skills, extensions, and locked packages that a Pi profile revision may reference.
+         */
+        get: operations["pi_agentpack_resources_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agents/pi/profiles/{profile_id}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Agent Pack revisions
+         * @description List immutable activated revisions and editable drafts for one Pi profile.
+         */
+        get: operations["pi_agentpack_revisions_list"];
+        put?: never;
+        /**
+         * Create Agent Pack draft
+         * @description Create a draft from the active profile with optional prompt and resource overrides.
+         */
+        post: operations["pi_agentpack_revision_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agents/pi/profiles/{profile_id}/revisions/{revision_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Agent Pack revision
+         * @description Return one Agent Pack revision and optionally its human-editable prompt text.
+         */
+        get: operations["pi_agentpack_revision_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Agent Pack draft
+         * @description Update an unactivated draft and refresh its validation result; activated history is immutable.
+         */
+        patch: operations["pi_agentpack_revision_update"];
+        trace?: never;
+    };
+    "/api/v1/agents/pi/profiles/{profile_id}/revisions/{revision_id}/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Agent Pack draft
+         * @description Validate prompt templates and reviewed resource references without changing the active profile.
+         */
+        post: operations["pi_agentpack_revision_validate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agents/pi/profiles/{profile_id}/revisions/{revision_id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate Agent Pack draft
+         * @description Atomically activate a validated draft when its optimistic base bundle still matches.
+         */
+        post: operations["pi_agentpack_revision_activate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agents/pi/profiles/{profile_id}/revisions/{revision_id}/rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Roll back Agent Pack profile
+         * @description Create and activate a new revision from historical content without rewriting prior history.
+         */
+        post: operations["pi_agentpack_revision_rollback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/firmwares": {
         parameters: {
             query?: never;
@@ -140,9 +368,29 @@ export interface paths {
         put?: never;
         /**
          * Upload firmware
-         * @description Store immutable firmware bytes by SHA-256 and reuse an existing record when identical content was already imported.
+         * @description Store immutable firmware bytes by SHA-256, register the same original identity with FirmEE, and reuse existing content.
          */
         post: operations["firmware_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/firmwares/imports/firmee/{iid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Adopt FirmEE firmware
+         * @description Archive the MD5-verified original for a FirmEE IID as a Service firmware without starting extraction.
+         */
+        post: operations["firmware_firmee_adopt"];
         delete?: never;
         options?: never;
         head?: never;
@@ -158,7 +406,7 @@ export interface paths {
         };
         /**
          * Search firmware archive
-         * @description Search and page the complete firmware archive by identity, provenance, hash, date, and extraction status.
+         * @description Search and page the unified Service and FirmEE catalog by identity, provenance, hash, date, and extraction status.
          */
         get: operations["firmware_search"];
         put?: never;
@@ -1314,7 +1562,7 @@ export interface components {
             /**
              * Contract Revision
              * @description Independent revision of the complete machine-readable API contract.
-             * @example 2026-10-01.3
+             * @example 2026-10-03.1
              */
             contract_revision: string;
             /**
@@ -2243,6 +2491,56 @@ export interface components {
             finished_at: components["schemas"]["ApiDateTime"] | null;
         };
         /**
+         * FirmEEAdoptionRequest
+         * @description Structured FirmEEAdoptionRequest API contract.
+         */
+        FirmEEAdoptionRequest: {
+            /**
+             * Source Path
+             * @description Source path.
+             * @example null
+             */
+            source_path?: string | null;
+            /**
+             * Notes
+             * @description Notes.
+             * @example null
+             */
+            notes?: string | null;
+        };
+        /**
+         * FirmEEAdoptionResult
+         * @description MD5-verified adoption of a FirmEE CLI original into Service storage.
+         */
+        FirmEEAdoptionResult: {
+            /** @description Firmware. */
+            firmware: components["schemas"]["FirmwareView"];
+            /**
+             * Firmee Iid
+             * @description Firmee iid.
+             * @example 1
+             */
+            firmee_iid: number;
+            /**
+             * Reused
+             * @description Whether the response reused an existing idempotent resource.
+             * @example true
+             */
+            reused: boolean;
+            /**
+             * Source Path
+             * @description Source path.
+             */
+            source_path: string;
+            /**
+             * Md5 Verified
+             * @description Md5 verified.
+             * @example true
+             * @constant
+             */
+            md5_verified: true;
+        };
+        /**
          * FirmEEBindingView
          * @description Structured FirmEEBindingView API contract.
          */
@@ -2620,11 +2918,36 @@ export interface components {
              */
             id: string;
             /**
+             * Service Firmware Id
+             * @description Service firmware id.
+             * @example null
+             */
+            service_firmware_id: string | null;
+            /**
+             * Catalog Source
+             * @description Catalog source.
+             * @example service
+             * @enum {string}
+             */
+            catalog_source: "service" | "firmee";
+            /**
+             * Operational
+             * @description Operational.
+             * @example true
+             */
+            operational: boolean;
+            /**
+             * Firmee Iid
+             * @description Firmee iid.
+             * @example null
+             */
+            firmee_iid: number | null;
+            /**
              * Sha256
              * @description Lowercase SHA-256 digest in hexadecimal.
-             * @example 4f8c3d6a9e82f3ab0a18c9da7d62afc62189e387a657011e620b2c5fbaf43d10
+             * @example null
              */
-            sha256: string;
+            sha256: string | null;
             /**
              * Md5
              * @description Lowercase MD5 digest in hexadecimal.
@@ -2640,9 +2963,9 @@ export interface components {
             /**
              * Size Bytes
              * @description Artifact size in bytes.
-             * @example 0
+             * @example null
              */
-            size_bytes: number;
+            size_bytes?: number | null;
             /**
              * Brand
              * @description Firmware vendor as supplied by the importer.
@@ -2675,18 +2998,16 @@ export interface components {
             source_name: string | null;
             /**
              * Source Url
-             * Format: uri
              * @description Absolute HTTP(S) URL from which the immutable firmware bytes were obtained.
              * @example null
              */
-            source_url?: string | null;
+            source_url: string | null;
             /**
              * Source Page Url
-             * Format: uri
              * @description Absolute HTTP(S) URL of the surrounding vendor or dataset page.
              * @example null
              */
-            source_page_url?: string | null;
+            source_page_url: string | null;
             /**
              * Hardware Revision
              * @description Hardware revision.
@@ -2723,10 +3044,16 @@ export interface components {
              * @example null
              */
             notes: string | null;
-            /** @description UTC creation timestamp. */
-            created_at: components["schemas"]["ApiDateTime"];
-            /** @description UTC last-update timestamp. */
-            updated_at: components["schemas"]["ApiDateTime"];
+            /**
+             * @description UTC creation timestamp.
+             * @example null
+             */
+            created_at: components["schemas"]["ApiDateTime"] | null;
+            /**
+             * @description UTC last-update timestamp.
+             * @example null
+             */
+            updated_at: components["schemas"]["ApiDateTime"] | null;
             /**
              * Latest Extraction Status
              * @description Latest extraction status.
@@ -2740,6 +3067,20 @@ export interface components {
              * @example true
              */
             has_validated_rootfs: boolean;
+            /**
+             * Firmee Rootfs Extracted
+             * @description Firmee rootfs extracted.
+             * @default false
+             * @example false
+             */
+            firmee_rootfs_extracted: boolean;
+            /**
+             * Firmee Storage Available
+             * @description Firmee storage available.
+             * @default false
+             * @example false
+             */
+            firmee_storage_available: boolean;
         };
         /**
          * FirmwareUploadCapabilities
@@ -2789,6 +3130,12 @@ export interface components {
                     [key: string]: string;
                 };
             };
+            /**
+             * Firmee Iid
+             * @description Firmee iid.
+             * @example null
+             */
+            firmee_iid?: number | null;
         };
         /**
          * FirmwareView
@@ -3172,6 +3519,268 @@ export interface components {
             finished_at: components["schemas"]["ApiDateTime"] | null;
         };
         /**
+         * PiAgentPackActivationRequest
+         * @description Structured PiAgentPackActivationRequest API contract.
+         */
+        PiAgentPackActivationRequest: {
+            /**
+             * Reason
+             * @description Reason.
+             */
+            reason: string;
+        };
+        /**
+         * PiAgentPackDraftRequest
+         * @description Structured PiAgentPackDraftRequest API contract.
+         */
+        PiAgentPackDraftRequest: {
+            /**
+             * Base Bundle Sha256
+             * @description Base bundle sha256.
+             * @example null
+             */
+            base_bundle_sha256?: string | null;
+            /**
+             * Description
+             * @description Human-readable purpose and behavior.
+             * @example null
+             */
+            description?: string | null;
+            /**
+             * Prompt Version
+             * @description Prompt version.
+             * @example null
+             */
+            prompt_version?: string | null;
+            /**
+             * System Prompt
+             * @description System prompt.
+             * @example null
+             */
+            system_prompt?: string | null;
+            /**
+             * Task Prompt Template
+             * @description Task prompt template.
+             * @example null
+             */
+            task_prompt_template?: string | null;
+            /**
+             * Tools
+             * @description Tools.
+             * @example null
+             */
+            tools?: string[] | null;
+            /**
+             * Skills
+             * @description Skills.
+             * @example null
+             */
+            skills?: string[] | null;
+            /**
+             * Extensions
+             * @description Extensions.
+             * @example null
+             */
+            extensions?: string[] | null;
+            /**
+             * Packages
+             * @description Packages.
+             * @example null
+             */
+            packages?: string[] | null;
+            /**
+             * Network Search
+             * @description Network search.
+             * @example null
+             */
+            network_search?: boolean | null;
+            /**
+             * Notes
+             * @description Notes.
+             * @example null
+             */
+            notes?: string | null;
+        };
+        /**
+         * PiAgentPackResourcesView
+         * @description Reviewed local skills, extensions, and locked packages available to Pi revisions.
+         */
+        PiAgentPackResourcesView: {
+            /**
+             * Skills
+             * @description Skills.
+             * @example []
+             */
+            skills: string[];
+            /**
+             * Extensions
+             * @description Extensions.
+             * @example []
+             */
+            extensions: string[];
+            /**
+             * Packages
+             * @description Packages.
+             * @example []
+             */
+            packages: components["schemas"]["PiPackageResourceView"][];
+        };
+        /**
+         * PiAgentPackRevisionView
+         * @description Versioned Pi profile draft or immutable activated history.
+         */
+        PiAgentPackRevisionView: {
+            /**
+             * Schema Version
+             * @description Version of this structured contract.
+             * @example 1
+             * @constant
+             */
+            schema_version: 1;
+            /**
+             * Id
+             * @description Stable Service resource identifier.
+             * @example 8cbf89b7-c37e-4c76-9465-b8ed54e26c29
+             */
+            id: string;
+            /**
+             * Profile Id
+             * @description Profile id.
+             */
+            profile_id: string;
+            /**
+             * Status
+             * @description Current lifecycle or task status from the documented enum.
+             * @example draft
+             * @enum {string}
+             */
+            status: "draft" | "activated";
+            /** @description UTC creation timestamp. */
+            created_at: components["schemas"]["ApiDateTime"];
+            /** @description UTC last-update timestamp. */
+            updated_at: components["schemas"]["ApiDateTime"];
+            /**
+             * @description Activated at.
+             * @example null
+             */
+            activated_at: components["schemas"]["ApiDateTime"] | null;
+            /**
+             * Base Bundle Sha256
+             * @description Base bundle sha256.
+             */
+            base_bundle_sha256: string;
+            /**
+             * Active Bundle Sha256
+             * @description Active bundle sha256.
+             * @example null
+             */
+            active_bundle_sha256: string | null;
+            /**
+             * Profile Revision
+             * @description Profile revision.
+             * @example null
+             */
+            profile_revision: number | null;
+            /**
+             * Description
+             * @description Human-readable purpose and behavior.
+             */
+            description: string;
+            /**
+             * Prompt Version
+             * @description Prompt version.
+             */
+            prompt_version: string;
+            /**
+             * Tools
+             * @description Tools.
+             * @example []
+             */
+            tools: string[];
+            /**
+             * Skills
+             * @description Skills.
+             * @example []
+             */
+            skills: string[];
+            /**
+             * Extensions
+             * @description Extensions.
+             * @example []
+             */
+            extensions: string[];
+            /**
+             * Packages
+             * @description Packages.
+             * @example []
+             */
+            packages: string[];
+            /**
+             * Network Search
+             * @description Network search.
+             * @example true
+             */
+            network_search: boolean;
+            /**
+             * Notes
+             * @description Notes.
+             * @example null
+             */
+            notes: string | null;
+            /** @description Validation. */
+            validation: components["schemas"]["PiAgentPackValidationView"];
+            /**
+             * Activation Reason
+             * @description Activation reason.
+             * @example null
+             */
+            activation_reason?: string | null;
+            /**
+             * Is Active
+             * @description Is active.
+             * @example true
+             */
+            is_active: boolean;
+            /**
+             * System Prompt
+             * @description System prompt.
+             * @example null
+             */
+            system_prompt?: string | null;
+            /**
+             * Task Prompt Template
+             * @description Task prompt template.
+             * @example null
+             */
+            task_prompt_template?: string | null;
+        };
+        /**
+         * PiAgentPackValidationView
+         * @description Structured PiAgentPackValidationView API contract.
+         */
+        PiAgentPackValidationView: {
+            /**
+             * Valid
+             * @description Valid.
+             * @example true
+             */
+            valid: boolean;
+            /**
+             * Errors
+             * @description Errors.
+             * @example []
+             */
+            errors: string[];
+            /**
+             * Warnings
+             * @description Warnings.
+             * @example []
+             */
+            warnings: string[];
+            /** @description Checked at. */
+            checked_at: components["schemas"]["ApiDateTime"];
+        };
+        /**
          * PiCredentialsView
          * @description Structured PiCredentialsView API contract.
          */
@@ -3275,6 +3884,36 @@ export interface components {
              * @example []
              */
             limitations?: string[];
+        };
+        /**
+         * PiPackageResourceView
+         * @description Structured PiPackageResourceView API contract.
+         */
+        PiPackageResourceView: {
+            /**
+             * Id
+             * @description Stable Service resource identifier.
+             * @example null
+             */
+            id: string | null;
+            /**
+             * Name
+             * @description Name.
+             * @example null
+             */
+            name: string | null;
+            /**
+             * Version
+             * @description Vendor firmware release version.
+             * @example null
+             */
+            version: string | null;
+            /**
+             * Reviewed
+             * @description Reviewed.
+             * @example true
+             */
+            reviewed: boolean;
         };
         /**
          * PiProfileCapabilitiesView
@@ -3516,6 +4155,158 @@ export interface components {
              * @example 1
              */
             duration_ms: number;
+        };
+        /**
+         * PlatformCheckView
+         * @description One timed platform dependency check with structured non-secret detail.
+         */
+        PlatformCheckView: {
+            /**
+             * Name
+             * @description Name.
+             */
+            name: string;
+            /**
+             * Status
+             * @description Current lifecycle or task status from the documented enum.
+             * @example ok
+             * @enum {string}
+             */
+            status: "ok" | "degraded" | "error" | "disabled";
+            /**
+             * Required
+             * @description Required.
+             * @example true
+             */
+            required: boolean;
+            /**
+             * Detail
+             * @description Human-readable error or diagnostic detail.
+             * @example firmware not found
+             */
+            detail: string;
+            /**
+             * Latency Ms
+             * @description Latency ms.
+             * @example 0
+             */
+            latency_ms: number;
+            /**
+             * Data
+             * @description Data.
+             * @example {}
+             */
+            data?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * PlatformReadinessView
+         * @description Required and optional dependency checks for automation readiness.
+         */
+        PlatformReadinessView: {
+            /**
+             * Status
+             * @description Current lifecycle or task status from the documented enum.
+             * @example ready
+             * @enum {string}
+             */
+            status: "ready" | "degraded" | "not_ready";
+            /** @description Checked at. */
+            checked_at: components["schemas"]["ApiDateTime"];
+            /**
+             * Checks
+             * @description Checks.
+             * @example []
+             */
+            checks: components["schemas"]["PlatformCheckView"][];
+        };
+        /**
+         * PlatformStorageView
+         * @description Service storage accessibility, required directories, and filesystem capacity.
+         */
+        PlatformStorageView: {
+            /**
+             * Path
+             * @description API path template or relative resource path.
+             * @example /api/v1/firmwares/{firmware_id}
+             */
+            path: string;
+            /**
+             * Total Bytes
+             * @description Total bytes.
+             * @example 0
+             */
+            total_bytes: number;
+            /**
+             * Used Bytes
+             * @description Used bytes.
+             * @example 0
+             */
+            used_bytes: number;
+            /**
+             * Free Bytes
+             * @description Free bytes.
+             * @example 0
+             */
+            free_bytes: number;
+            /**
+             * Writable
+             * @description Writable.
+             * @example true
+             */
+            writable: boolean;
+            /**
+             * Missing Directories
+             * @description Missing directories.
+             * @example []
+             */
+            missing_directories: string[];
+        };
+        /**
+         * PlatformWorkerView
+         * @description Worker identity, capabilities, lifecycle, and heartbeat freshness.
+         */
+        PlatformWorkerView: {
+            /**
+             * Id
+             * @description Stable Service resource identifier.
+             * @example 8cbf89b7-c37e-4c76-9465-b8ed54e26c29
+             */
+            id: string;
+            /**
+             * Hostname
+             * @description Hostname.
+             */
+            hostname: string;
+            /**
+             * Pid
+             * @description Pid.
+             * @example 1
+             */
+            pid: number;
+            /**
+             * Status
+             * @description Current lifecycle or task status from the documented enum.
+             * @example starting
+             * @enum {string}
+             */
+            status: "starting" | "ready" | "stale" | "stopped";
+            /**
+             * Capabilities
+             * @description Capabilities.
+             * @example []
+             */
+            capabilities: string[];
+            /** @description UTC execution start timestamp, when started. */
+            started_at: components["schemas"]["ApiDateTime"];
+            /** @description Heartbeat at. */
+            heartbeat_at: components["schemas"]["ApiDateTime"];
+            /**
+             * @description Stopped at.
+             * @example null
+             */
+            stopped_at: components["schemas"]["ApiDateTime"] | null;
         };
         /**
          * ProbeRecord
@@ -5435,6 +6226,212 @@ export interface operations {
             };
         };
     };
+    platform_liveness: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthView"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    platform_readiness: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformReadinessView"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Required backend unavailable. */
+            503: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformReadinessView"];
+                };
+            };
+        };
+    };
+    platform_backends_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformCheckView"][];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    platform_workers_list: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformWorkerView"][];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    platform_storage_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformStorageView"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     platform_capabilities: {
         parameters: {
             query?: never;
@@ -5678,6 +6675,573 @@ export interface operations {
             };
         };
     };
+    pi_agentpack_resources_list: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PiAgentPackResourcesView"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pi_agentpack_revisions_list: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Configured Pi profile identifier. */
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PiAgentPackRevisionView"][];
+                };
+            };
+            /** @description The referenced resource does not exist. */
+            404: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The request does not satisfy the API contract. */
+            422: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pi_agentpack_revision_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Configured Pi profile identifier. */
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Input contract for pi_agentpack_revision_create. */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PiAgentPackDraftRequest"];
+            };
+        };
+        responses: {
+            /** @description Resource created. */
+            201: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PiAgentPackRevisionView"];
+                };
+            };
+            /** @description The referenced resource does not exist. */
+            404: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The resource state or request precondition conflicts with this operation. */
+            409: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The request does not satisfy the API contract. */
+            422: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pi_agentpack_revision_get: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Include local human-readable prompt text in the Pi profile response.
+                 * @example false
+                 */
+                include_prompts?: boolean;
+            };
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Configured Pi profile identifier. */
+                profile_id: string;
+                /** @description Recipe or Agent Pack revision identifier for the selected route. */
+                revision_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PiAgentPackRevisionView"];
+                };
+            };
+            /** @description The referenced resource does not exist. */
+            404: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The request does not satisfy the API contract. */
+            422: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pi_agentpack_revision_update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Configured Pi profile identifier. */
+                profile_id: string;
+                /** @description Recipe or Agent Pack revision identifier for the selected route. */
+                revision_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Input contract for pi_agentpack_revision_update. */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PiAgentPackDraftRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PiAgentPackRevisionView"];
+                };
+            };
+            /** @description The referenced resource does not exist. */
+            404: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The resource state or request precondition conflicts with this operation. */
+            409: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The request does not satisfy the API contract. */
+            422: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pi_agentpack_revision_validate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Configured Pi profile identifier. */
+                profile_id: string;
+                /** @description Recipe or Agent Pack revision identifier for the selected route. */
+                revision_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PiAgentPackRevisionView"];
+                };
+            };
+            /** @description The referenced resource does not exist. */
+            404: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The request does not satisfy the API contract. */
+            422: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pi_agentpack_revision_activate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Configured Pi profile identifier. */
+                profile_id: string;
+                /** @description Recipe or Agent Pack revision identifier for the selected route. */
+                revision_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Input contract for pi_agentpack_revision_activate. */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PiAgentPackActivationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PiAgentPackRevisionView"];
+                };
+            };
+            /** @description The referenced resource does not exist. */
+            404: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The resource state or request precondition conflicts with this operation. */
+            409: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The request does not satisfy the API contract. */
+            422: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pi_agentpack_revision_rollback: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Configured Pi profile identifier. */
+                profile_id: string;
+                /** @description Recipe or Agent Pack revision identifier for the selected route. */
+                revision_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Input contract for pi_agentpack_revision_rollback. */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PiAgentPackActivationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PiAgentPackRevisionView"];
+                };
+            };
+            /** @description The referenced resource does not exist. */
+            404: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The resource state or request precondition conflicts with this operation. */
+            409: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The request does not satisfy the API contract. */
+            422: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     firmware_list: {
         parameters: {
             query?: {
@@ -5789,6 +7353,122 @@ export interface operations {
             };
             /** @description The Service could not complete the operation because of an internal or configuration error. */
             500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description A required local backend is temporarily unavailable; the idempotent request may be retried. */
+            503: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    firmware_firmee_adopt: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional 1-128 character correlation identifier; invalid values are replaced.
+                 * @example audit-agent-20261001-0001
+                 */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /**
+                 * @description Positive FirmEE firmware image identifier.
+                 * @example 1
+                 */
+                iid: number;
+            };
+            cookie?: never;
+        };
+        /** @description Input contract for firmware_firmee_adopt. */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FirmEEAdoptionRequest"];
+            };
+        };
+        responses: {
+            /** @description The FirmEE original already existed in Service. */
+            200: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FirmEEAdoptionResult"];
+                };
+            };
+            /** @description Resource created. */
+            201: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FirmEEAdoptionResult"];
+                };
+            };
+            /** @description The referenced resource does not exist. */
+            404: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The resource state or request precondition conflicts with this operation. */
+            409: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The request does not satisfy the API contract. */
+            422: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description The Service could not complete the operation because of an internal or configuration error. */
+            500: {
+                headers: {
+                    /** @description Correlation identifier for this request. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description A required local backend is temporarily unavailable; the idempotent request may be retried. */
+            503: {
                 headers: {
                     /** @description Correlation identifier for this request. */
                     "X-Request-ID"?: string;
@@ -6318,7 +7998,7 @@ export interface operations {
                 "X-Request-ID"?: string;
             };
             path: {
-                /** @description Immutable recipe revision identifier. */
+                /** @description Recipe or Agent Pack revision identifier for the selected route. */
                 revision_id: string;
             };
             cookie?: never;
@@ -6398,7 +8078,7 @@ export interface operations {
                 "X-Request-ID"?: string;
             };
             path: {
-                /** @description Immutable recipe revision identifier. */
+                /** @description Recipe or Agent Pack revision identifier for the selected route. */
                 revision_id: string;
             };
             cookie?: never;
@@ -6545,7 +8225,7 @@ export interface operations {
                 "X-Request-ID"?: string;
             };
             path: {
-                /** @description Immutable recipe revision identifier. */
+                /** @description Recipe or Agent Pack revision identifier for the selected route. */
                 revision_id: string;
             };
             cookie?: never;
@@ -6625,7 +8305,7 @@ export interface operations {
                 "X-Request-ID"?: string;
             };
             path: {
-                /** @description Immutable recipe revision identifier. */
+                /** @description Recipe or Agent Pack revision identifier for the selected route. */
                 revision_id: string;
             };
             cookie?: never;

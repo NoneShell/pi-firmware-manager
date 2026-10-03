@@ -40,10 +40,13 @@ export function formatStatus(capabilities: ApiCapabilities, baseUrl: string): st
 export function formatFirmwareSearch(page: FirmwareSearchPage): string {
 	const lines = [`Found ${page.total} firmware records. Page ${page.page}/${Math.max(page.page_count, 1)}.`];
 	for (const [index, item] of page.items.entries()) {
+		const identity = item.service_firmware_id ?? item.id;
 		lines.push(
 			`${index + 1}. ${item.brand} ${item.product} ${item.version}`,
-			`   ID: ${item.id} | ${item.original_filename} | ${bytes(item.size_bytes)}`,
-			`   Extraction: ${item.latest_extraction_status} | validated rootfs: ${item.has_validated_rootfs}`,
+			`   ID: ${identity} | ${item.original_filename} | ${bytes(item.size_bytes)}`,
+			`   Catalog: ${item.catalog_source} | operational: ${item.operational} | FirmEE IID: ${item.firmee_iid ?? "—"}`,
+			`   Extraction: ${item.latest_extraction_status} | validated rootfs: ${item.has_validated_rootfs} | FirmEE rootfs: ${item.firmee_rootfs_extracted}`,
+			...(!item.operational ? ["   Next action: adopt this FirmEE IID before details, extraction, or simulation."] : []),
 		);
 	}
 	return lines.join("\n");
@@ -77,6 +80,7 @@ export function formatUpload(result: FirmwareUploadResult, localSha256: string):
 		`SHA-256: ${result.firmware.sha256}`,
 		`Local SHA-256: ${localSha256}`,
 		`Metadata conflicts: ${conflicts.length ? conflicts.join(", ") : "none"}`,
+		...("firmee_iid" in result && result.firmee_iid ? [`FirmEE IID: ${result.firmee_iid}`] : []),
 	].join("\n");
 }
 

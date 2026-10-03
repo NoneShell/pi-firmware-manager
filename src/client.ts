@@ -7,12 +7,28 @@ import type {
 	ExtractionEvent,
 	ExtractionPage,
 	ExtractionRun,
+	ExportJobView,
+	ExtractionRecipeView,
+	FirmwareAdoptionResult,
 	FirmwareArchiveView,
 	FirmwareSearchPage,
 	FirmwareUploadResult,
 	FirmwareView,
 	HealthView,
 	JsonRecord,
+	PlatformCheckView,
+	PlatformReadinessView,
+	PlatformStorageView,
+	PlatformWorkerView,
+	RuntimeExecResult,
+	RuntimeLogsView,
+	RuntimePage,
+	RuntimeRecipeView,
+	RuntimeSessionView,
+	RuntimeView,
+	SimulationEvent,
+	SimulationPage,
+	SimulationView,
 } from "./types.ts";
 
 type QueryValue = string | number | boolean | null | undefined;
@@ -198,12 +214,39 @@ export class FirmeeClient {
 		return this.requestJson("GET", "/health", { signal });
 	}
 
+	liveness(signal?: AbortSignal): Promise<HealthView> {
+		return this.requestJson("GET", "/health/live", { signal });
+	}
+
+	readiness(signal?: AbortSignal): Promise<PlatformReadinessView> {
+		return this.requestJson("GET", "/health/ready", { signal, timeoutMs: Math.max(15_000, this.config.requestTimeoutMs) });
+	}
+
+	platformBackends(signal?: AbortSignal): Promise<PlatformCheckView[]> {
+		return this.requestJson("GET", "/api/v1/platform/backends", {
+			signal,
+			timeoutMs: Math.max(15_000, this.config.requestTimeoutMs),
+		});
+	}
+
+	platformStorage(signal?: AbortSignal): Promise<PlatformStorageView> {
+		return this.requestJson("GET", "/api/v1/platform/storage", { signal });
+	}
+
+	platformWorkers(signal?: AbortSignal): Promise<PlatformWorkerView[]> {
+		return this.requestJson("GET", "/api/v1/platform/workers", { signal });
+	}
+
 	capabilities(signal?: AbortSignal): Promise<ApiCapabilities> {
 		return this.requestJson("GET", "/api/v1/capabilities", { signal });
 	}
 
 	searchFirmware(query: Record<string, QueryValue>, signal?: AbortSignal): Promise<FirmwareSearchPage> {
 		return this.requestJson("GET", "/api/v1/firmwares/search", { query, signal });
+	}
+
+	firmwareFacets(query: Record<string, QueryValue> = {}, signal?: AbortSignal): Promise<JsonRecord> {
+		return this.requestJson("GET", "/api/v1/firmwares/facets", { query, signal });
 	}
 
 	getFirmware(id: string, includeArchive: boolean, signal?: AbortSignal): Promise<FirmwareView | FirmwareArchiveView> {
@@ -218,6 +261,10 @@ export class FirmeeClient {
 			signal,
 			timeoutMs: this.config.transferTimeoutMs,
 		});
+	}
+
+	adoptFirmware(iid: number, request: JsonRecord, signal?: AbortSignal): Promise<FirmwareAdoptionResult> {
+		return this.requestJson("POST", `/api/v1/firmwares/imports/firmee/${iid}`, { body: request, signal });
 	}
 
 	updateFirmware(id: string, patch: JsonRecord, signal?: AbortSignal): Promise<FirmwareView> {
@@ -252,13 +299,170 @@ export class FirmeeClient {
 		return this.requestJson("POST", `/api/v1/extractions/${encodeURIComponent(id)}/cancel`, { signal });
 	}
 
+	startSimulation(firmwareId: string, request: JsonRecord, signal?: AbortSignal): Promise<SimulationView> {
+		return this.requestJson("POST", `/api/v1/firmwares/${encodeURIComponent(firmwareId)}/simulations`, {
+			body: request,
+			signal,
+		});
+	}
+
+	listSimulations(query: Record<string, QueryValue>, signal?: AbortSignal): Promise<SimulationPage> {
+		return this.requestJson("GET", "/api/v1/simulations", { query, signal });
+	}
+
+	getSimulation(id: string, signal?: AbortSignal): Promise<SimulationView> {
+		return this.requestJson("GET", `/api/v1/simulations/${encodeURIComponent(id)}`, { signal });
+	}
+
+	cancelSimulation(id: string, signal?: AbortSignal): Promise<SimulationView> {
+		return this.requestJson("POST", `/api/v1/simulations/${encodeURIComponent(id)}/cancel`, { signal });
+	}
+
+	listSimulationEvents(id: string, after: number, limit = 100, signal?: AbortSignal): Promise<SimulationEvent[]> {
+		return this.requestJson("GET", `/api/v1/simulations/${encodeURIComponent(id)}/events`, {
+			query: { after, limit },
+			signal,
+		});
+	}
+
+	listRuntimes(query: Record<string, QueryValue>, signal?: AbortSignal): Promise<RuntimePage> {
+		return this.requestJson("GET", "/api/v1/runtimes", { query, signal });
+	}
+
+	getRuntime(id: string, signal?: AbortSignal): Promise<RuntimeView> {
+		return this.requestJson("GET", `/api/v1/runtimes/${encodeURIComponent(id)}`, { signal });
+	}
+
+	stopRuntime(id: string, signal?: AbortSignal): Promise<RuntimeView> {
+		return this.requestJson("DELETE", `/api/v1/runtimes/${encodeURIComponent(id)}`, { signal });
+	}
+
+	relaunchRuntime(id: string, action: "restart" | "reset", ttlSeconds: number | undefined, signal?: AbortSignal): Promise<JsonRecord> {
+		return this.requestJson("POST", `/api/v1/runtimes/${encodeURIComponent(id)}/${action}`, {
+			body: ttlSeconds === undefined ? {} : { ttl_seconds: ttlSeconds },
+			signal,
+		});
+	}
+
+	createRuntimeSession(runtimeId: string, ttlSeconds: number, signal?: AbortSignal): Promise<RuntimeSessionView> {
+		return this.requestJson("POST", `/api/v1/runtimes/${encodeURIComponent(runtimeId)}/sessions`, {
+			body: { client_label: "pi-firmware-manager", ttl_seconds: ttlSeconds },
+			signal,
+		});
+	}
+
+	renewRuntimeSession(runtimeId: string, sessionId: string, ttlSeconds: number, signal?: AbortSignal): Promise<RuntimeSessionView> {
+		return this.requestJson(
+			"POST",
+			`/api/v1/runtimes/${encodeURIComponent(runtimeId)}/sessions/${encodeURIComponent(sessionId)}/renew`,
+			{ query: { ttl_seconds: ttlSeconds }, signal },
+		);
+	}
+
+	async releaseRuntimeSession(runtimeId: string, sessionId: string, signal?: AbortSignal): Promise<void> {
+		const response = await this.fetchResponse(
+			"DELETE",
+			`/api/v1/runtimes/${encodeURIComponent(runtimeId)}/sessions/${encodeURIComponent(sessionId)}`,
+			{ signal },
+		);
+		if (!response.ok) throw await this.errorFromResponse(response);
+	}
+
+	execRuntime(runtimeId: string, request: JsonRecord, signal?: AbortSignal): Promise<RuntimeExecResult> {
+		return this.requestJson("POST", `/api/v1/runtimes/${encodeURIComponent(runtimeId)}/exec`, {
+			body: request,
+			signal,
+			timeoutMs: Math.max(this.config.requestTimeoutMs, Number(request.timeout_seconds ?? 30) * 1000 + 5000),
+		});
+	}
+
+	runtimeLogs(runtimeId: string, kind: string, tail: number, signal?: AbortSignal): Promise<RuntimeLogsView> {
+		return this.requestJson("GET", `/api/v1/runtimes/${encodeURIComponent(runtimeId)}/logs`, {
+			query: { kind, tail },
+			signal,
+		});
+	}
+
+	uploadRuntimeFile(runtimeId: string, form: FormData, signal?: AbortSignal): Promise<JsonRecord> {
+		return this.requestJson("PUT", `/api/v1/runtimes/${encodeURIComponent(runtimeId)}/files`, {
+			body: form,
+			signal,
+			timeoutMs: this.config.transferTimeoutMs,
+		});
+	}
+
+	downloadRuntimeFile(runtimeId: string, sessionId: string, sourcePath: string, signal?: AbortSignal): Promise<Response> {
+		return this.fetchResponse("GET", `/api/v1/runtimes/${encodeURIComponent(runtimeId)}/files`, {
+			query: { session_id: sessionId, source_path: sourcePath },
+			headers: { Accept: "application/octet-stream" },
+			signal,
+			timeoutMs: this.config.transferTimeoutMs,
+		});
+	}
+
+	createExport(simulationId: string, kind: "local" | "docker", signal?: AbortSignal): Promise<ExportJobView> {
+		return this.requestJson("POST", `/api/v1/simulations/${encodeURIComponent(simulationId)}/exports/${kind}/jobs`, {
+			signal,
+		});
+	}
+
+	getLatestExport(simulationId: string, kind: "local" | "docker", signal?: AbortSignal): Promise<ExportJobView> {
+		return this.requestJson("GET", `/api/v1/simulations/${encodeURIComponent(simulationId)}/exports/${kind}/jobs/latest`, {
+			signal,
+		});
+	}
+
+	getExportJob(id: string, signal?: AbortSignal): Promise<ExportJobView> {
+		return this.requestJson("GET", `/api/v1/export-jobs/${encodeURIComponent(id)}`, { signal });
+	}
+
+	listExtractionRecipes(firmwareId: string, signal?: AbortSignal): Promise<ExtractionRecipeView[]> {
+		return this.requestJson("GET", `/api/v1/firmwares/${encodeURIComponent(firmwareId)}/recipes`, { signal });
+	}
+
+	listRuntimeRecipes(firmwareId: string, signal?: AbortSignal): Promise<RuntimeRecipeView[]> {
+		return this.requestJson("GET", `/api/v1/firmwares/${encodeURIComponent(firmwareId)}/runtime-recipes`, { signal });
+	}
+
+	recipeLifecycle(
+		kind: "extraction" | "runtime",
+		revisionId: string,
+		action: "activate" | "disable",
+		reason: string,
+		signal?: AbortSignal,
+	): Promise<ExtractionRecipeView | RuntimeRecipeView> {
+		const prefix = kind === "runtime" ? "runtime-recipes" : "recipes";
+		return this.requestJson("POST", `/api/v1/${prefix}/${encodeURIComponent(revisionId)}/${action}`, {
+			body: { reason },
+			signal,
+		});
+	}
+
 	async streamExtractionEvents(
 		id: string,
 		after: number,
 		signal: AbortSignal,
 		onEvent: (event: ExtractionEvent) => void | Promise<void>,
 	): Promise<number> {
-		const response = await fetch(this.url(`/api/v1/extractions/${encodeURIComponent(id)}/events/stream`, { after }), {
+		return this.streamEvents(`/api/v1/extractions/${encodeURIComponent(id)}/events/stream`, after, signal, onEvent);
+	}
+
+	streamSimulationEvents(
+		id: string,
+		after: number,
+		signal: AbortSignal,
+		onEvent: (event: SimulationEvent) => void | Promise<void>,
+	): Promise<number> {
+		return this.streamEvents(`/api/v1/simulations/${encodeURIComponent(id)}/events/stream`, after, signal, onEvent);
+	}
+
+	private async streamEvents<T extends { sequence: number; event_type: string }>(
+		path: string,
+		after: number,
+		signal: AbortSignal,
+		onEvent: (event: T) => void | Promise<void>,
+	): Promise<number> {
+		const response = await fetch(this.url(path, { after }), {
 			headers: { Accept: "text/event-stream", "X-Request-ID": randomUUID() },
 			signal,
 		});
@@ -299,7 +503,7 @@ export class FirmeeClient {
 					);
 				}
 				if (isRecord(parsed) && typeof parsed.sequence === "number" && typeof parsed.event_type === "string") {
-					const event = parsed as unknown as ExtractionEvent;
+					const event = parsed as unknown as T;
 					lastSequence = Math.max(lastSequence, event.sequence);
 					await onEvent(event);
 				}
@@ -314,7 +518,8 @@ export class FirmeeClient {
 export function describeError(error: unknown): string {
 	if (error instanceof FirmeeApiError) {
 		const request = error.requestId ? ` Request ID: ${error.requestId}.` : "";
-		return `${error.code}: ${error.message}.${request}`;
+		const message = error.message.startsWith(`${error.code}:`) ? error.message : `${error.code}: ${error.message}`;
+		return `${message}.${request}`;
 	}
 	if (error instanceof Error) {
 		const cause = error.cause;

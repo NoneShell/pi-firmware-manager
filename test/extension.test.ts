@@ -46,8 +46,9 @@ test("extension registers core and deferred workflow tools", () => {
 		"firmee_export",
 		"firmee_recipe",
 		"firmee_recipe_control",
+		"firmee_task_diagnose",
 	]);
 	assert.equal([...exposures.values()].filter((value) => value === "direct").length, 14);
-	assert.equal([...exposures.values()].filter((value) => value === "deferred").length, 9);
+	assert.equal([...exposures.values()].filter((value) => value === "deferred").length, 10);
 	assert.deepEqual(events, ["session_start", "session_shutdown"]);
 });

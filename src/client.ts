@@ -295,6 +295,22 @@ export class FirmeeClient {
 		});
 	}
 
+	extractionWorkflow(id: string, signal?: AbortSignal): Promise<JsonRecord> {
+		return this.requestJson("GET", `/api/v1/extractions/${encodeURIComponent(id)}/workflow`, { signal });
+	}
+
+	extractionAttempts(id: string, signal?: AbortSignal): Promise<JsonRecord[]> {
+		return this.requestJson("GET", `/api/v1/extractions/${encodeURIComponent(id)}/attempts`, { signal });
+	}
+
+	extractionAnalysis(id: string, signal?: AbortSignal): Promise<JsonRecord> {
+		return this.requestJson("GET", `/api/v1/extractions/${encodeURIComponent(id)}/analysis`, { signal });
+	}
+
+	extractionCheckpoints(id: string, signal?: AbortSignal): Promise<JsonRecord[]> {
+		return this.requestJson("GET", `/api/v1/extractions/${encodeURIComponent(id)}/checkpoints`, { signal });
+	}
+
 	cancelExtraction(id: string, signal?: AbortSignal): Promise<ExtractionRun> {
 		return this.requestJson("POST", `/api/v1/extractions/${encodeURIComponent(id)}/cancel`, { signal });
 	}
@@ -323,6 +339,14 @@ export class FirmeeClient {
 			query: { after, limit },
 			signal,
 		});
+	}
+
+	simulationWorkflow(id: string, signal?: AbortSignal): Promise<JsonRecord> {
+		return this.requestJson("GET", `/api/v1/simulations/${encodeURIComponent(id)}/workflow`, { signal });
+	}
+
+	simulationCheckpoints(id: string, signal?: AbortSignal): Promise<JsonRecord[]> {
+		return this.requestJson("GET", `/api/v1/simulations/${encodeURIComponent(id)}/checkpoints`, { signal });
 	}
 
 	listRuntimes(query: Record<string, QueryValue>, signal?: AbortSignal): Promise<RuntimePage> {

@@ -2,7 +2,7 @@
 
 A Pi extension that exposes complete FirmEE firmware laboratory workflows as model-callable tools.
 
-Version `0.2.0` supports:
+Version `0.2.1` supports:
 
 - liveness, readiness, backend, worker, and storage diagnostics
 - unified Service/FirmEE catalog search and legacy IID adoption
@@ -95,6 +95,7 @@ tool prompt until they are needed:
 | `firmee_export` | Create, inspect, wait for, and download local/Docker exports |
 | `firmee_recipe` | List extraction or Runtime Recipe revisions |
 | `firmee_recipe_control` | Activate or disable an exact Recipe revision |
+| `firmee_task_diagnose` | Collect workflow, events, checkpoints, attempts, and analysis for one task |
 
 Example requests:
 

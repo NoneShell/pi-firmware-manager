@@ -25,6 +25,7 @@ service and real Belkin F9K1115 firmware. No database connection was used.
 - RootFS size: 13,905,161 bytes
 - RootFS SHA-256: `793c021264be359a50f9c3f9ab2f9a93d361ee3076cc010049a3d74f113f2123`
 - The plugin downloaded the RootFS with ETag/Range support and verified the recorded SHA-256.
+- The task diagnostic workflow collected 7 events, 4 checkpoints, and 1 deterministic attempt.
 
 ## Simulation and Runtime
 
@@ -45,6 +46,7 @@ service and real Belkin F9K1115 firmware. No database connection was used.
 - Export SHA-256: `a403faf8174082fc2d76fe3e6d4e67a1fac439a84a2820ca3e9f6e63a1ab17ce`
 - The plugin downloaded the export and verified its SHA-256.
 - Runtime Recipe `373179c3-f4ce-4383-be01-ad15a65db83a` was listed and idempotently activated.
+- Simulation diagnostics collected 43 events and 9 checkpoints from the real successful task.
 
 ## Runtime control and terminal
 

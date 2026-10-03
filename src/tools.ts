@@ -29,6 +29,7 @@ import { registerPlatformTools } from "./tools/platform.ts";
 import { registerRecipeTools } from "./tools/recipe.ts";
 import { registerRuntimeTools } from "./tools/runtime.ts";
 import { registerSimulationTools } from "./tools/simulation.ts";
+import { registerTaskTools } from "./tools/task.ts";
 
 interface ToolEnvelope {
 	ok: boolean;
@@ -515,4 +516,5 @@ export function registerFirmeeTools(pi: ExtensionAPI): void {
 	registerRuntimeTools(pi);
 	registerExportTools(pi);
 	registerRecipeTools(pi);
+	registerTaskTools(pi);
 }
